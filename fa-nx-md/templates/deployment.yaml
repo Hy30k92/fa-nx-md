@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.mariadb.name }}
+  labels:
+    app: {{ .Values.deployment.mariadb.app }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.deployment.mariadb.app }}
+  template:
+    metadata:
+      name: {{ .Values.deployment.mariadb.name }}
+      labels:
+        app: {{ .Values.deployment.mariadb.app }}
+    spec:
+      containers:
+        - name: {{ .Values.deployment.mariadb.name }}
+          image: {{ .Values.deployment.mariadb.image }}:{{ .Values.deployment.mariadb.tags }}
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: {{ .Values.deployment.mariadb.secret }}
+      volumes:
+        - name: helm-mariadb-storage
+          emptyDir: {}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.fastapi.name }}
+  labels:
+    app: {{ .Values.deployment.fastapi.app }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.deployment.fastapi.app }}
+  template:
+    metadata:
+      name: {{ .Values.deployment.fastapi.name }}
+      labels:
+        app: {{ .Values.deployment.fastapi.app }}
+    spec:
+      containers:
+        - name: {{ .Values.deployment.fastapi.name }}
+          image: hy30k/k8s-fastapi:v3
+          ports:
+            - containerPort: 80
+              protocol: TCP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helm-fanginx-deploy
+  labels:
+    app: helm-fanginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: helm-fanginx
+  template:
+    metadata:
+      name: helm-nginx
+      labels:
+        app: helm-fanginx
+    spec:
+      containers:
+        - name: helm-fanginx
+          image: hy30k/k8s-fanginx:v3
+          ports:
+            - containerPort: 80
+              protocol: TCP
